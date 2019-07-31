@@ -1,0 +1,123 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'com.github.peacetrue.modelgenerator'
+version '1.0-SNAPSHOT'
+
+repositories {
+    jcenter()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+dependencies {
+    implementation('com.github.peacetrue.modelgenerator:peacetrue-modelgenerator:1.1-SNAPSHOT')
+    implementation('com.github.peacetrue.modelgenerator:peacetrue-modelgenerator-template:1.1-SNAPSHOT')
+    implementation('com.github.peacetrue.modelgenerator:peacetrue-modelgenerator-model-datasource:1.1-SNAPSHOT')
+    implementation 'org.springframework:spring-jdbc:5.0.6.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure:2.0.6.RELEASE'
+    // Use JUnit test framework for unit tests
+    testImplementation 'junit:junit:4.12'
+    implementation('com.github.peacetrue.modelgenerator:peacetrue-modelgenerator-template-aum:1.1-SNAPSHOT')
+    implementation 'mysql:mysql-connector-java:5.1.39'
+}
+
+gradlePlugin {
+    plugins {
+        modelGenerator {
+            id = 'com.github.peacetrue.modelgenerator'
+            displayName = 'model generator plugin'
+            description = 'generate basic crud code for a model'
+            implementationClass = 'com.github.peacetrue.modelgenerator.ModelGeneratorPlugin'
+        }
+    }
+}
+
+
+// Add a source set for the functional test suite
+sourceSets {
+    functionalTest {
+    }
+}
+
+gradlePlugin.testSourceSets(sourceSets.functionalTest)
+configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
+
+// Add a task to run the functional tests
+task functionalTest(type: Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+check {
+    // Run the functional tests as part of `check`
+    dependsOn(tasks.functionalTest)
+}
+
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+def repository_snapshots = "https://oss.sonatype.org/content/repositories/snapshots/"
+def repository_releases = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = project.name
+                description = project.description
+                url = 'https://github.com/peacetrue/peacetrue-modelgenerator-gradle-plugin'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'xiayouxue'
+                        name = 'xiayouxue'
+                        email = 'xiayouxue@hotmail.com'
+                    }
+                }
+                scm {
+                    connection = 'https://github.com/peacetrue/peacetrue-modelgenerator-gradle-plugin.git'
+                    developerConnection = 'https://github.com/peacetrue/peacetrue-modelgenerator-gradle-plugin.git'
+                    url = 'https://github.com/peacetrue/peacetrue-modelgenerator-gradle-plugin'
+                }
+            }
+
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+
+    repositories {
+        maven {
+            url version.endsWith('SNAPSHOT') ? repository_snapshots : repository_releases
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}

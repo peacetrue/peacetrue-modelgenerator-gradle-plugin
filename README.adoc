@@ -1,0 +1,38 @@
+= 模块生成器Gradle插件
+xiayx <xiayouxue@hotmail.com>
+v1.0, 2019-07-31: SNAPSHOT
+:doctype: docbook
+:toc: left
+:numbered:
+:imagesdir: docs/assets/images
+:sourcedir: src/main/java
+:resourcesdir: src/main/resources
+:testsourcedir: src/test/java
+:source-highlighter: highlightjs
+
+详细介绍参考与本插件类似的maven插件
+https://github.com/peacetrue/peacetrue-modelgenerator-maven-plugin[peacetrue-modelgenerator-maven-plugin^]
+
+== 使用说明
+.配置插件
+[source%nowrap,gradle]
+----
+buildscript {
+    repositories {
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    }
+
+    dependencies {
+        classpath('com.github.peacetrue.modelgenerator:peacetrue-modelgenerator-gradle-plugin:1.0-SNAPSHOT')
+    }
+}
+
+apply plugin: 'com.github.peacetrue.modelgenerator'
+generateModel {
+    propertiesPath="配置文件的位置" //默认为当前模块resources下的application-datasource.properties
+    projectPath="项目路径" //默认为当前项目的根目录
+}
+----
+
+.运行命令
+image::task.png[]
